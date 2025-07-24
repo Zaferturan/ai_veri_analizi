@@ -48,6 +48,12 @@ htmlcov/
 # Large data files
 data/*.csv
 
+# Environment files with secrets
+.env
+.env.broken
+.env.backup
+example.env
+
 # Logs
 *.log
 
