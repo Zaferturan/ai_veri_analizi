@@ -397,6 +397,15 @@ class StreamlitApp:
     
     def render_header(self):
         """Ana başlığı göster"""
+        # Sidebar toggle'ı görünür yapmak için CSS
+        st.markdown("""
+        <style>
+        .css-1d391kg {
+            display: block !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
         # Logo ve başlık yan yana
         col1, col2 = st.columns([1, 4])
         
