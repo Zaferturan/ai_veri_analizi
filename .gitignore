@@ -46,7 +46,7 @@ htmlcov/
 *.sqlite3
 
 # Large data files
-data/*.csv
+data/
 
 # Environment files with secrets
 .env
