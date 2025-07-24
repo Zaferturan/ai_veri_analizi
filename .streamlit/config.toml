@@ -1,0 +1,12 @@
+[theme]
+# Font boyutu ayarları
+fontSize = "medium"  # small, medium, large
+
+[client]
+# Sayfa genişliği
+showErrorDetails = true
+
+[server]
+# Sunucu ayarları
+enableCORS = false
+enableXsrfProtection = false 

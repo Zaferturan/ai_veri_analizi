@@ -1,0 +1,11 @@
+Bu bir örnek metin dosyasıdır. 
+
+Bu dosya embedding cache sisteminin dosya okuma özelliğini test etmek için oluşturulmuştur.
+
+İçerik:
+- Türkçe karakterler: ğüşıöçĞÜŞİÖÇ
+- Sayılar: 1234567890
+- Özel karakterler: !@#$%^&*()
+- Uzun metin: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+Bu metin embedding cache sisteminde saklanacak ve tekrar kullanıldığında cache'den alınacaktır. 
