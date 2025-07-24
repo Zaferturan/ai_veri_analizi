@@ -1,11 +1,34 @@
-# 📘 VeriKeşif – Yapay Zeka Destekli Talep Analiz Platformu
+# 🚀 VeriKeşif – Yapay Zeka Destekli Talep Analiz Platformu
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-24%20passed-brightgreen.svg)](tests)
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success.svg)](status)
+<div align="center">
+
+![Python](https://img.shields.io/badge/Python-3.8+-blue.svg?style=for-the-badge&logo=python&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge&logo=opensourceinitiative&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-24%20passed-brightgreen.svg?style=for-the-badge&logo=testinglibrary&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Production%20Ready-success.svg?style=for-the-badge&logo=vercel&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-Web%20App-red.svg?style=for-the-badge&logo=streamlit&logoColor=white)
+![AI](https://img.shields.io/badge/AI-Powered-orange.svg?style=for-the-badge&logo=openai&logoColor=white)
+
+[![GitHub stars](https://img.shields.io/github/stars/Zaferturan/ai_veri_analizi?style=social)](https://github.com/Zaferturan/ai_veri_analizi/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/Zaferturan/ai_veri_analizi?style=social)](https://github.com/Zaferturan/ai_veri_analizi/network)
+[![GitHub issues](https://img.shields.io/github/issues/Zaferturan/ai_veri_analizi)](https://github.com/Zaferturan/ai_veri_analizi/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/Zaferturan/ai_veri_analizi)](https://github.com/Zaferturan/ai_veri_analizi/pulls)
+
+</div>
 
 > **VeriKeşif**, kullanıcı taleplerini ve önerilerini analiz etmek için geliştirilmiş, yapay zeka destekli bir veri analiz platformudur. MySQL veritabanlarından veri keşfi yapar, AI modelleri ile metin analizi gerçekleştirir ve performans metriklerini izler.
+
+<div align="center">
+
+### 🌟 **Öne Çıkan Özellikler**
+
+| 🔐 **Güvenlik** | 📊 **Veri Analizi** | 🤖 **AI Destekli** | 📈 **Performans** |
+|:---:|:---:|:---:|:---:|
+| JWT Token Yönetimi | MySQL Tablo Analizi | OpenAI GPT Entegrasyonu | Embedding Cache |
+| Rol Tabanlı Erişim | Veri Kalitesi Kontrolü | Google Gemini API | Prometheus Metrikler |
+| Şifre Hashleme | Metin Kolonu Tespiti | Metin Özetleme | Gerçek Zamanlı İzleme |
+
+</div>
 
 ## 📌 Proje Tanımı
 
@@ -594,10 +617,10 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 
 ## 📞 İletişim
 
-- **Proje Sahibi**: [Adınız]
-- **E-posta**: [email@example.com]
-- **GitHub**: [github.com/your-username]
-- **Issues**: [GitHub Issues](https://github.com/your-username/istek_oneri_analizi/issues)
+- **Proje Sahibi**: Zafer TURAN
+- **E-posta**: zaferturan@gmail.com
+- **GitHub**: [@Zaferturan](https://github.com/Zaferturan)
+- **Issues**: [GitHub Issues](https://github.com/Zaferturan/ai_veri_analizi/issues)
 
 ## 🙏 Teşekkürler
 

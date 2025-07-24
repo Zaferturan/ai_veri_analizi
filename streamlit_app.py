@@ -1631,7 +1631,7 @@ class StreamlitApp:
         st.markdown("""
         <div style='text-align: center; color: #666;'>
             <p>🔍 VeriKeşif - AI Destekli Talep Analizi Platformu</p>
-            <p>Geliştirici: AI Assistant | Versiyon: 1.0</p>
+            <p>Geliştirici: <a href="https://github.com/Zaferturan" target="_blank" style="color: #0066cc; text-decoration: none;">Zafer TURAN</a> | Versiyon: 1.0</p>
         </div>
         """, unsafe_allow_html=True)
 
