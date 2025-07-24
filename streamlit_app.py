@@ -386,6 +386,8 @@ class StreamlitApp:
             st.session_state.uploaded_table_name = None
         if 'show_data_upload' not in st.session_state:
             st.session_state.show_data_upload = False
+        if 'sidebar_state' not in st.session_state:
+            st.session_state.sidebar_state = 'expanded'
         
     def render_auth_section(self):
         """Auth bölümünü göster - GELİŞTİRME SÜRECİNDE DEVRE DIŞI"""
@@ -425,8 +427,36 @@ class StreamlitApp:
             display: block !important;
             visibility: visible !important;
         }
+        
+        /* Manuel toggle butonu için stil */
+        .manual-toggle {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 9999;
+            background: #ff4b4b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .manual-toggle:hover {
+            background: #ff3333;
+        }
         </style>
         """, unsafe_allow_html=True)
+        
+        # Manuel sidebar toggle butonu
+        if st.button("☰", key="manual_sidebar_toggle", help="Sidebar'ı aç/kapat"):
+            if st.session_state.get('sidebar_state', 'expanded') == 'expanded':
+                st.session_state.sidebar_state = 'collapsed'
+            else:
+                st.session_state.sidebar_state = 'expanded'
+            st.rerun()
         
         # Logo ve başlık yan yana
         col1, col2 = st.columns([1, 4])
@@ -1922,20 +1952,8 @@ def main():
     # Sidebar
     app.render_sidebar()
     
-    # Header - doğrudan burada render et
-    col1, col2 = st.columns([1, 4])
-    
-    with col1:
-        try:
-            st.image("logo.png", width=80)
-        except:
-            st.markdown("🔍")  # Logo yoksa emoji göster
-            
-    with col2:
-        st.markdown('<h1 class="main-header">🔍 Nilüfer Kaşif - AI Destekli Veri Analizi</h1>', 
-                   unsafe_allow_html=True)
-    
-    st.markdown("---")
+    # Header - render_header metodunu kullan
+    app.render_header()
     
     # Ana içerik - geliştirme sürecinde auth kontrolü yok
     if st.session_state.get('connection_established', False):
