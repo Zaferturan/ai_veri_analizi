@@ -386,8 +386,6 @@ class StreamlitApp:
             st.session_state.uploaded_table_name = None
         if 'show_data_upload' not in st.session_state:
             st.session_state.show_data_upload = False
-        if 'sidebar_state' not in st.session_state:
-            st.session_state.sidebar_state = 'expanded'
         
     def render_auth_section(self):
         """Auth bölümünü göster - GELİŞTİRME SÜRECİNDE DEVRE DIŞI"""
@@ -402,51 +400,41 @@ class StreamlitApp:
         # Sidebar toggle'ı görünür yapmak için CSS
         st.markdown("""
         <style>
-        /* Streamlit'in orijinal sidebar toggle'ını geri getir */
+        /* Sidebar toggle butonunu görünür yap - BASİT VE ETKİLİ */
         [data-testid="collapsedControl"] {
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
             position: fixed !important;
-            top: 0.5rem !important;
-            left: 0.5rem !important;
+            top: 10px !important;
+            left: 10px !important;
             z-index: 9999 !important;
             background-color: #1f77b4 !important;
             color: white !important;
             border-radius: 50% !important;
-            width: 2.5rem !important;
-            height: 2.5rem !important;
+            width: 40px !important;
+            height: 40px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
-            font-size: 1rem !important;
+            font-size: 16px !important;
             cursor: pointer !important;
-            border: none !important;
         }
         
-        /* Sidebar kapalıyken toggle butonunu mutlaka göster */
-        .stApp[data-collapsed="true"] [data-testid="collapsedControl"],
-        .stApp[data-collapsed="true"] .css-1d391kg,
-        .stApp[data-collapsed="true"] .stApp > div:first-child > div:first-child > div:first-child {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            position: fixed !important;
-            top: 0.5rem !important;
-            left: 0.5rem !important;
-            z-index: 9999 !important;
-        }
-        
-        /* Toggle butonuna hover efekti */
+        /* Sidebar toggle butonuna hover efekti */
         [data-testid="collapsedControl"]:hover {
             background-color: #1565c0 !important;
             transform: scale(1.1) !important;
         }
+        
+        /* Sidebar kapalıyken toggle butonunu göster */
+        .stApp[data-collapsed="true"] [data-testid="collapsedControl"] {
+            display: block !important;
+            visibility: visible !important;
+        }
         </style>
         """, unsafe_allow_html=True)
-        
-
         
         # Logo ve başlık yan yana
         col1, col2 = st.columns([1, 4])
@@ -1826,44 +1814,32 @@ def main():
             visibility: hidden !important;
         }
         
-        /* 10. Sidebar toggle butonunu koru - çok güçlü seçiciler */
+        /* 10. Sidebar toggle butonunu koru - BASİT VE ETKİLİ */
         [data-testid="collapsedControl"] {
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
             position: fixed !important;
-            top: 0.5rem !important;
-            left: 0.5rem !important;
+            top: 10px !important;
+            left: 10px !important;
             z-index: 9999 !important;
             background-color: #1f77b4 !important;
             color: white !important;
             border-radius: 50% !important;
-            width: 2.5rem !important;
-            height: 2.5rem !important;
+            width: 40px !important;
+            height: 40px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
-            font-size: 1rem !important;
+            font-size: 16px !important;
             cursor: pointer !important;
-            border: none !important;
         }
         
         /* 11. Sidebar toggle butonuna hover efekti */
         [data-testid="collapsedControl"]:hover {
             background-color: #1565c0 !important;
             transform: scale(1.1) !important;
-        }
-        
-        /* 12. Sidebar kapalıyken toggle butonunu mutlaka göster */
-        .stApp[data-collapsed="true"] [data-testid="collapsedControl"] {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            position: fixed !important;
-            top: 0.5rem !important;
-            left: 0.5rem !important;
-            z-index: 9999 !important;
         }
         /* Deploy butonunu ve geliştirme öğelerini tamamen kaldır */
         .stDeployButton,
@@ -1926,8 +1902,20 @@ def main():
     # Sidebar
     app.render_sidebar()
     
-    # Header - render_header metodunu kullan
-    app.render_header()
+    # Header - doğrudan burada render et
+    col1, col2 = st.columns([1, 4])
+    
+    with col1:
+        try:
+            st.image("logo.png", width=80)
+        except:
+            st.markdown("🔍")  # Logo yoksa emoji göster
+            
+    with col2:
+        st.markdown('<h1 class="main-header">🔍 Nilüfer Kaşif - AI Destekli Veri Analizi</h1>', 
+                   unsafe_allow_html=True)
+    
+    st.markdown("---")
     
     # Ana içerik - geliştirme sürecinde auth kontrolü yok
     if st.session_state.get('connection_established', False):
