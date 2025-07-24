@@ -170,7 +170,7 @@ class StreamlitApp:
         self.cache = None
         self.connection_status = False
         
-    def load_csv_file(self, uploaded_file) -> pd.DataFrame:
+    def load_csv_file(self, uploaded_file, separator=',') -> pd.DataFrame:
         """CSV dosyasını yükle"""
         try:
             # Encoding tespiti
@@ -180,7 +180,7 @@ class StreamlitApp:
             for encoding in encodings:
                 try:
                     uploaded_file.seek(0)  # Dosya pointer'ını başa al
-                    df = pd.read_csv(uploaded_file, encoding=encoding)
+                    df = pd.read_csv(uploaded_file, encoding=encoding, sep=separator)
                     break
                 except UnicodeDecodeError:
                     continue
@@ -191,6 +191,41 @@ class StreamlitApp:
             return df
         except Exception as e:
             raise Exception(f"CSV dosyası yüklenirken hata: {e}")
+    
+    def detect_csv_separator(self, uploaded_file) -> str:
+        """CSV dosyasının ayırıcısını otomatik tespit et"""
+        try:
+            uploaded_file.seek(0)
+            sample = uploaded_file.read(1024).decode('utf-8', errors='ignore')
+            uploaded_file.seek(0)
+            
+            # Yaygın ayırıcıları test et
+            separators = [',', ';', '\t', '|']
+            max_fields = 0
+            best_separator = ','
+            
+            for sep in separators:
+                try:
+                    lines = sample.split('\n')[:5]  # İlk 5 satırı kontrol et
+                    field_counts = []
+                    
+                    for line in lines:
+                        if line.strip():
+                            fields = line.split(sep)
+                            field_counts.append(len(fields))
+                    
+                    if field_counts:
+                        avg_fields = sum(field_counts) / len(field_counts)
+                        if avg_fields > max_fields:
+                            max_fields = avg_fields
+                            best_separator = sep
+                            
+                except:
+                    continue
+            
+            return best_separator
+        except:
+            return ','  # Varsayılan olarak virgül
     
     def load_excel_file(self, uploaded_file) -> pd.DataFrame:
         """Excel dosyasını yükle"""
@@ -852,10 +887,14 @@ class StreamlitApp:
             with col2:
                 # CSV için ek seçenekler
                 if file_extension == 'csv':
+                    # Otomatik ayırıcı tespiti
+                    detected_separator = self.detect_csv_separator(uploaded_file)
+                    
                     separator = st.selectbox(
                         "Ayırıcı:",
                         options=[',', ';', '\t', '|'],
-                        help="CSV dosyasındaki alan ayırıcısı"
+                        index=[',', ';', '\t', '|'].index(detected_separator) if detected_separator in [',', ';', '\t', '|'] else 0,
+                        help=f"CSV dosyasındaki alan ayırıcısı (Otomatik tespit: {detected_separator})"
                     )
             
             # Yükle butonu
@@ -904,7 +943,7 @@ class StreamlitApp:
                         # 2. Dosyayı işle
                         if file_extension == 'csv':
                             # CSV dosyasını yükle
-                            df = self.load_csv_file(uploaded_file)
+                            df = self.load_csv_file(uploaded_file, separator)
                             
                             # Veritabanına kaydet
                             success = self.save_dataframe_to_database(df, table_name, target_engine, if_exists)
