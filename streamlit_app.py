@@ -736,12 +736,30 @@ class StreamlitApp:
             
             # Mevcut veritabanları
             existing_databases = []
-            if st.session_state.get('connection_established', False):
-                try:
-                    engine = st.session_state.get('engine')
-                    existing_databases = self.get_database_list(engine)
-                except:
-                    pass
+            
+            # .env dosyasındaki MySQL bilgileriyle otomatik bağlantı kur
+            try:
+                mysql_host = os.getenv('MYSQL_HOST', 'localhost')
+                mysql_port = int(os.getenv('MYSQL_PORT', '3306'))
+                mysql_user = os.getenv('MYSQL_USER', 'root')
+                mysql_password = os.getenv('MYSQL_PASSWORD', '')
+                
+                # Ana MySQL sunucusuna bağlan
+                temp_connection_string = f"mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:{mysql_port}"
+                temp_engine = create_engine(temp_connection_string)
+                
+                # Veritabanı listesini al
+                existing_databases = self.get_database_list(temp_engine)
+                
+                # Session state'i güncelle
+                if not st.session_state.get('connection_established', False):
+                    st.session_state.engine = temp_engine
+                    st.session_state.connection_established = True
+                    
+            except Exception as e:
+                st.error(f"❌ MySQL bağlantısı kurulamadı: {e}")
+                st.info("💡 Lütfen .env dosyasındaki MySQL bağlantı bilgilerini kontrol edin")
+                return
             
             # Veritabanı seçenekleri
             db_options = ["Yeni veritabanı oluştur"] + existing_databases
