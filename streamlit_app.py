@@ -268,6 +268,24 @@ class StreamlitApp:
             logger.error(f"Veritabanı listesi alınırken hata: {e}")
             return []
     
+    def get_table_list(self, engine, database_name: str = None) -> List[str]:
+        """Belirtilen veritabanındaki tabloları listele"""
+        try:
+            with engine.connect() as conn:
+                if database_name and 'mysql' in str(engine.url):
+                    # Belirli bir veritabanındaki tabloları listele
+                    conn.execute(text(f"USE `{database_name}`"))
+                    result = conn.execute(text("SHOW TABLES"))
+                    tables = [row[0] for row in result.fetchall()]
+                else:
+                    # Mevcut veritabanındaki tabloları listele
+                    result = conn.execute(text("SHOW TABLES"))
+                    tables = [row[0] for row in result.fetchall()]
+                return tables
+        except Exception as e:
+            logger.error(f"Tablo listesi alınırken hata: {e}")
+            return []
+    
     def create_database(self, database_name: str, engine) -> bool:
         """Yeni veritabanı oluştur"""
         try:
@@ -736,6 +754,8 @@ class StreamlitApp:
             
             # Yeni veritabanı adı (eğer seçildiyse)
             new_database_name = None
+            target_database = None
+            
             if selected_db_option == "Yeni veritabanı oluştur":
                 new_database_name = st.text_input(
                     "Yeni veritabanı adı:",
@@ -744,32 +764,72 @@ class StreamlitApp:
                 if not new_database_name:
                     st.warning("⚠️ Lütfen yeni veritabanı adı girin!")
                     return
+                target_database = new_database_name
             else:
                 target_database = selected_db_option
             
-            # Tablo adı
-            st.subheader("📋 Tablo Adı")
-            default_table_name = uploaded_file.name.split('.')[0].lower()
-            table_name = st.text_input(
-                "Tablo adı:",
-                value=default_table_name,
-                help="Veritabanında oluşturulacak tablonun adı"
+            # Tablo seçimi
+            st.subheader("📋 Tablo Seçimi")
+            
+            # Mevcut tablolar (eğer veritabanı seçildiyse)
+            existing_tables = []
+            if target_database and target_database != "Yeni veritabanı oluştur":
+                try:
+                    engine = st.session_state.get('engine')
+                    if engine:
+                        existing_tables = self.get_table_list(engine, target_database)
+                except:
+                    pass
+            
+            # Tablo seçenekleri
+            table_options = ["Yeni tablo oluştur"] + existing_tables
+            
+            selected_table_option = st.selectbox(
+                "Tablo seçin:",
+                options=table_options,
+                help="Mevcut bir tablo seçin veya yeni bir tablo oluşturun"
             )
             
-            if not table_name:
-                st.warning("⚠️ Lütfen tablo adı girin!")
-                return
+            # Tablo adı
+            if selected_table_option == "Yeni tablo oluştur":
+                default_table_name = uploaded_file.name.split('.')[0].lower()
+                table_name = st.text_input(
+                    "Yeni tablo adı:",
+                    value=default_table_name,
+                    help="Veritabanında oluşturulacak tablonun adı"
+                )
+                
+                if not table_name:
+                    st.warning("⚠️ Lütfen tablo adı girin!")
+                    return
+            else:
+                table_name = selected_table_option
+                st.info(f"📋 Seçilen tablo: {table_name}")
+            
+            # Mevcut tablo bilgisi
+            if selected_table_option != "Yeni tablo oluştur" and existing_tables:
+                st.warning(f"⚠️ '{table_name}' tablosu zaten mevcut. Yükleme seçeneklerini dikkatli seçin!")
             
             # Yükleme seçenekleri
             st.subheader("⚙️ Yükleme Seçenekleri")
             
             col1, col2 = st.columns(2)
             with col1:
-                if_exists = st.selectbox(
-                    "Tablo zaten varsa:",
-                    options=['replace', 'append', 'fail'],
-                    help="Mevcut tablo varsa ne yapılacağını seçin"
-                )
+                if selected_table_option == "Yeni tablo oluştur":
+                    if_exists = 'replace'  # Yeni tablo için her zaman replace
+                    st.info("🆕 Yeni tablo oluşturulacak")
+                else:
+                    if_exists = st.selectbox(
+                        "Mevcut tablo için:",
+                        options=[
+                            ('replace', 'Tabloyu sil ve yeniden oluştur'),
+                            ('append', 'Mevcut verilere ekle'),
+                            ('fail', 'Hata ver (işlemi durdur)')
+                        ],
+                        format_func=lambda x: x[1],
+                        help="Mevcut tablo varsa ne yapılacağını seçin"
+                    )
+                    if_exists = if_exists[0]  # Tuple'dan ilk değeri al
             
             with col2:
                 # CSV için ek seçenekler
@@ -810,10 +870,18 @@ class StreamlitApp:
                             
                         else:
                             # Mevcut veritabanını kullan
-                            target_engine = st.session_state.get('engine')
-                            if not target_engine:
-                                st.error("❌ Veritabanı bağlantısı bulunamadı!")
-                                return
+                            mysql_host = os.getenv('MYSQL_HOST', 'localhost')
+                            mysql_port = int(os.getenv('MYSQL_PORT', '3306'))
+                            mysql_user = os.getenv('MYSQL_USER', 'root')
+                            mysql_password = os.getenv('MYSQL_PASSWORD', '')
+                            
+                            # Seçilen veritabanına bağlan
+                            target_connection_string = f"mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:{mysql_port}/{target_database}"
+                            target_engine = create_engine(target_connection_string)
+                            
+                            # Session state'i güncelle
+                            st.session_state.engine = target_engine
+                            st.session_state.connection_established = True
                         
                         # 2. Dosyayı işle
                         if file_extension == 'csv':
