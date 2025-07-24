@@ -45,6 +45,9 @@ htmlcov/
 *.sqlite
 *.sqlite3
 
+# Large data files
+data/*.csv
+
 # Logs
 *.log
 
