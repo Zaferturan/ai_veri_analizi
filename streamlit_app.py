@@ -10,6 +10,7 @@ kolayca kullanabilecekleri bir web arayüzü sağlar.
 - AI analizleri (özetleme, sınıflandırma, kümelendirme)
 - Embedding cache durumu
 - Metrik izleme
+- Veri yükleme arayüzü (.csv, .xlsx, .sql dosyaları)
 """
 
 import streamlit as st
@@ -28,6 +29,9 @@ import sqlite3
 import bcrypt
 import jwt
 from typing import List, Dict, Any, Optional
+import io
+import tempfile
+import re
 
 # .env dosyasını yükle
 load_dotenv('.env')
@@ -166,6 +170,129 @@ class StreamlitApp:
         self.cache = None
         self.connection_status = False
         
+    def load_csv_file(self, uploaded_file) -> pd.DataFrame:
+        """CSV dosyasını yükle"""
+        try:
+            # Encoding tespiti
+            encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+            df = None
+            
+            for encoding in encodings:
+                try:
+                    uploaded_file.seek(0)  # Dosya pointer'ını başa al
+                    df = pd.read_csv(uploaded_file, encoding=encoding)
+                    break
+                except UnicodeDecodeError:
+                    continue
+                    
+            if df is None:
+                raise ValueError("Dosya encoding'i tespit edilemedi")
+                
+            return df
+        except Exception as e:
+            raise Exception(f"CSV dosyası yüklenirken hata: {e}")
+    
+    def load_excel_file(self, uploaded_file) -> pd.DataFrame:
+        """Excel dosyasını yükle"""
+        try:
+            # Excel dosyasını oku
+            df = pd.read_excel(uploaded_file, engine='openpyxl')
+            return df
+        except Exception as e:
+            raise Exception(f"Excel dosyası yüklenirken hata: {e}")
+    
+    def execute_sql_file(self, uploaded_file, engine) -> str:
+        """SQL dosyasını çalıştır"""
+        try:
+            # SQL dosyasını oku
+            sql_content = uploaded_file.read().decode('utf-8')
+            
+            # SQL komutlarını ayır (; ile ayrılmış)
+            sql_commands = [cmd.strip() for cmd in sql_content.split(';') if cmd.strip()]
+            
+            results = []
+            with engine.connect() as conn:
+                for i, command in enumerate(sql_commands):
+                    if command:
+                        try:
+                            result = conn.execute(text(command))
+                            if result.returns_rows:
+                                # SELECT komutu ise sonuçları al
+                                rows = result.fetchall()
+                                results.append(f"Komut {i+1}: {len(rows)} satır döndürüldü")
+                            else:
+                                # INSERT, UPDATE, DELETE gibi komutlar
+                                results.append(f"Komut {i+1}: Başarıyla çalıştırıldı")
+                            conn.commit()
+                        except Exception as e:
+                            results.append(f"Komut {i+1} hatası: {e}")
+                            
+            return "\n".join(results)
+        except Exception as e:
+            raise Exception(f"SQL dosyası çalıştırılırken hata: {e}")
+    
+    def save_dataframe_to_database(self, df: pd.DataFrame, table_name: str, engine, if_exists: str = 'replace') -> bool:
+        """DataFrame'i veritabanına kaydet"""
+        try:
+            # Tablo adını temizle (sadece alfanumerik ve alt çizgi)
+            clean_table_name = re.sub(r'[^a-zA-Z0-9_]', '_', table_name)
+            
+            # DataFrame'i veritabanına yaz
+            df.to_sql(
+                name=clean_table_name,
+                con=engine,
+                if_exists=if_exists,
+                index=False,
+                method='multi',
+                chunksize=1000
+            )
+            
+            return True
+        except Exception as e:
+            raise Exception(f"Veritabanına kaydetme hatası: {e}")
+    
+    def get_database_list(self, engine) -> List[str]:
+        """Mevcut veritabanlarını listele"""
+        try:
+            # MySQL için veritabanı listesi
+            if 'mysql' in str(engine.url):
+                with engine.connect() as conn:
+                    result = conn.execute(text("SHOW DATABASES"))
+                    databases = [row[0] for row in result.fetchall() 
+                               if row[0] not in ['information_schema', 'mysql', 'performance_schema', 'sys']]
+                return databases
+            else:
+                # SQLite için sadece mevcut veritabanı
+                return [engine.url.database or 'main']
+        except Exception as e:
+            logger.error(f"Veritabanı listesi alınırken hata: {e}")
+            return []
+    
+    def create_database(self, database_name: str, engine) -> bool:
+        """Yeni veritabanı oluştur"""
+        try:
+            # MySQL için yeni veritabanı oluştur
+            if 'mysql' in str(engine.url):
+                # Ana MySQL sunucusuna bağlan
+                mysql_host = os.getenv('MYSQL_HOST', 'localhost')
+                mysql_port = int(os.getenv('MYSQL_PORT', '3306'))
+                mysql_user = os.getenv('MYSQL_USER', 'root')
+                mysql_password = os.getenv('MYSQL_PASSWORD', '')
+                
+                temp_connection_string = f"mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:{mysql_port}"
+                temp_engine = create_engine(temp_connection_string)
+                
+                with temp_engine.connect() as conn:
+                    conn.execute(text(f"CREATE DATABASE IF NOT EXISTS `{database_name}`"))
+                    conn.commit()
+                    
+                return True
+            else:
+                # SQLite için veritabanı zaten mevcut
+                return True
+        except Exception as e:
+            raise Exception(f"Veritabanı oluşturma hatası: {e}")
+        
     def init_session_state(self):
         """Session state'i başlat"""
         if 'authenticated' not in st.session_state:
@@ -200,6 +327,12 @@ class StreamlitApp:
             st.session_state.custom_system_defaults = {}
         if 'available_models' not in st.session_state:
             st.session_state.available_models = ["llama3:latest", "qwen2.5-coder:32b-instruct-q4_0", "mistral:latest"]
+        if 'uploaded_data' not in st.session_state:
+            st.session_state.uploaded_data = None
+        if 'uploaded_table_name' not in st.session_state:
+            st.session_state.uploaded_table_name = None
+        if 'show_data_upload' not in st.session_state:
+            st.session_state.show_data_upload = False
         
     def render_auth_section(self):
         """Auth bölümünü göster - GELİŞTİRME SÜRECİNDE DEVRE DIŞI"""
@@ -234,6 +367,19 @@ class StreamlitApp:
             
             # Sadece giriş yapmış kullanıcılar için diğer bölümler
             if st.session_state.authenticated:
+                st.markdown("---")
+                
+                # Veri yükleme bölümü
+                st.subheader("📁 Veri Yükle")
+                
+                # Veri yükleme toggle butonu
+                if st.button("📁 Veri Yükle", key="data_upload_toggle"):
+                    st.session_state.show_data_upload = not st.session_state.show_data_upload
+                
+                # Veri yükleme arayüzü
+                if st.session_state.get('show_data_upload', False):
+                    self._render_data_upload_section()
+                
                 st.markdown("---")
                 
                 # Veritabanı bağlantısı
@@ -540,6 +686,202 @@ class StreamlitApp:
                     st.session_state.connection_established = False
                     self.connection_status = False
                     
+    def _render_data_upload_section(self):
+        """Veri yükleme arayüzü"""
+        st.markdown("---")
+        
+        # Dosya yükleme
+        uploaded_file = st.file_uploader(
+            "📁 Dosya Seçin",
+            type=['csv', 'xlsx', 'sql'],
+            help="CSV, Excel veya SQL dosyası yükleyin (Max: 10 MB)"
+        )
+        
+        if uploaded_file is not None:
+            # Dosya boyutu kontrolü (10 MB)
+            if uploaded_file.size > 10 * 1024 * 1024:
+                st.error("❌ Dosya boyutu 10 MB'dan büyük olamaz!")
+                return
+            
+            # Dosya türü kontrolü
+            file_extension = uploaded_file.name.split('.')[-1].lower()
+            
+            if file_extension not in ['csv', 'xlsx', 'sql']:
+                st.error("❌ Desteklenmeyen dosya türü!")
+                return
+            
+            # Dosya bilgilerini göster
+            st.info(f"📄 Dosya: {uploaded_file.name} ({uploaded_file.size / 1024:.1f} KB)")
+            
+            # Veritabanı seçimi
+            st.subheader("🗄️ Veritabanı Seçimi")
+            
+            # Mevcut veritabanları
+            existing_databases = []
+            if st.session_state.get('connection_established', False):
+                try:
+                    engine = st.session_state.get('engine')
+                    existing_databases = self.get_database_list(engine)
+                except:
+                    pass
+            
+            # Veritabanı seçenekleri
+            db_options = ["Yeni veritabanı oluştur"] + existing_databases
+            
+            selected_db_option = st.selectbox(
+                "Veritabanı seçin:",
+                options=db_options,
+                help="Mevcut bir veritabanı seçin veya yeni bir veritabanı oluşturun"
+            )
+            
+            # Yeni veritabanı adı (eğer seçildiyse)
+            new_database_name = None
+            if selected_db_option == "Yeni veritabanı oluştur":
+                new_database_name = st.text_input(
+                    "Yeni veritabanı adı:",
+                    help="Yeni veritabanı için bir isim girin"
+                )
+                if not new_database_name:
+                    st.warning("⚠️ Lütfen yeni veritabanı adı girin!")
+                    return
+            else:
+                target_database = selected_db_option
+            
+            # Tablo adı
+            st.subheader("📋 Tablo Adı")
+            default_table_name = uploaded_file.name.split('.')[0].lower()
+            table_name = st.text_input(
+                "Tablo adı:",
+                value=default_table_name,
+                help="Veritabanında oluşturulacak tablonun adı"
+            )
+            
+            if not table_name:
+                st.warning("⚠️ Lütfen tablo adı girin!")
+                return
+            
+            # Yükleme seçenekleri
+            st.subheader("⚙️ Yükleme Seçenekleri")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if_exists = st.selectbox(
+                    "Tablo zaten varsa:",
+                    options=['replace', 'append', 'fail'],
+                    help="Mevcut tablo varsa ne yapılacağını seçin"
+                )
+            
+            with col2:
+                # CSV için ek seçenekler
+                if file_extension == 'csv':
+                    separator = st.selectbox(
+                        "Ayırıcı:",
+                        options=[',', ';', '\t', '|'],
+                        help="CSV dosyasındaki alan ayırıcısı"
+                    )
+            
+            # Yükle butonu
+            if st.button("🚀 Yükle", type="primary"):
+                try:
+                    with st.spinner("Dosya yükleniyor..."):
+                        # 1. Veritabanı bağlantısı
+                        if new_database_name:
+                            # Yeni veritabanı oluştur
+                            mysql_host = os.getenv('MYSQL_HOST', 'localhost')
+                            mysql_port = int(os.getenv('MYSQL_PORT', '3306'))
+                            mysql_user = os.getenv('MYSQL_USER', 'root')
+                            mysql_password = os.getenv('MYSQL_PASSWORD', '')
+                            
+                            # Ana MySQL sunucusuna bağlan
+                            temp_connection_string = f"mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:{mysql_port}"
+                            temp_engine = create_engine(temp_connection_string)
+                            
+                            # Yeni veritabanı oluştur
+                            self.create_database(new_database_name, temp_engine)
+                            
+                            # Yeni veritabanına bağlan
+                            target_connection_string = f"mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:{mysql_port}/{new_database_name}"
+                            target_engine = create_engine(target_connection_string)
+                            
+                            # Session state'i güncelle
+                            st.session_state.engine = target_engine
+                            st.session_state.connection_established = True
+                            target_database = new_database_name
+                            
+                        else:
+                            # Mevcut veritabanını kullan
+                            target_engine = st.session_state.get('engine')
+                            if not target_engine:
+                                st.error("❌ Veritabanı bağlantısı bulunamadı!")
+                                return
+                        
+                        # 2. Dosyayı işle
+                        if file_extension == 'csv':
+                            # CSV dosyasını yükle
+                            df = self.load_csv_file(uploaded_file)
+                            
+                            # Veritabanına kaydet
+                            success = self.save_dataframe_to_database(df, table_name, target_engine, if_exists)
+                            
+                            if success:
+                                st.success(f"✅ CSV dosyası başarıyla yüklendi!")
+                                st.info(f"📊 {len(df)} satır, {len(df.columns)} kolon")
+                                
+                                # Veri önizleme
+                                st.subheader("👀 Veri Önizleme")
+                                st.dataframe(df.head(10))
+                                
+                                # Session state'i güncelle
+                                st.session_state.uploaded_data = df
+                                st.session_state.uploaded_table_name = table_name
+                                st.session_state.selected_table = table_name
+                                
+                        elif file_extension == 'xlsx':
+                            # Excel dosyasını yükle
+                            df = self.load_excel_file(uploaded_file)
+                            
+                            # Veritabanına kaydet
+                            success = self.save_dataframe_to_database(df, table_name, target_engine, if_exists)
+                            
+                            if success:
+                                st.success(f"✅ Excel dosyası başarıyla yüklendi!")
+                                st.info(f"📊 {len(df)} satır, {len(df.columns)} kolon")
+                                
+                                # Veri önizleme
+                                st.subheader("👀 Veri Önizleme")
+                                st.dataframe(df.head(10))
+                                
+                                # Session state'i güncelle
+                                st.session_state.uploaded_data = df
+                                st.session_state.uploaded_table_name = table_name
+                                st.session_state.selected_table = table_name
+                                
+                        elif file_extension == 'sql':
+                            # SQL dosyasını çalıştır
+                            result = self.execute_sql_file(uploaded_file, target_engine)
+                            
+                            st.success(f"✅ SQL dosyası başarıyla çalıştırıldı!")
+                            st.info("📋 Çalıştırılan komutlar:")
+                            st.text(result)
+                            
+                            # SQL dosyası için tablo seçimi
+                            st.info("💡 SQL dosyası çalıştırıldı. Analiz etmek istediğiniz tabloyu seçin.")
+                            
+                        # Başarı mesajı
+                        st.success(f"🎉 Veri yükleme tamamlandı!")
+                        st.info(f"📁 Veritabanı: {target_database}")
+                        st.info(f"📋 Tablo: {table_name}")
+                        
+                        # Analize başla butonu
+                        if file_extension in ['csv', 'xlsx']:
+                            if st.button("🔍 Analize Başla", type="primary"):
+                                st.session_state.show_data_upload = False
+                                st.rerun()
+                        
+                except Exception as e:
+                    st.error(f"❌ Yükleme hatası: {e}")
+                    logger.error(f"Veri yükleme hatası: {e}")
+    
     def _render_postgresql_connection(self):
         """PostgreSQL bağlantı formu"""
         # .env'den PostgreSQL veritabanı bilgilerini al
@@ -591,6 +933,35 @@ class StreamlitApp:
     def render_main_content(self):
         """Ana içeriği göster"""
         # Geliştirme sürecinde auth kontrolü yok
+        
+        # Yüklenen veri varsa göster
+        if st.session_state.get('uploaded_data') is not None:
+            st.subheader("📁 Yüklenen Veri")
+            
+            uploaded_df = st.session_state.uploaded_data
+            uploaded_table = st.session_state.uploaded_table_name
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("📊 Satır Sayısı", len(uploaded_df))
+            with col2:
+                st.metric("📋 Kolon Sayısı", len(uploaded_df.columns))
+            with col3:
+                st.metric("📁 Tablo Adı", uploaded_table)
+            
+            # Veri önizleme
+            st.subheader("👀 Veri Önizleme")
+            st.dataframe(uploaded_df.head(20))
+            
+            # Analiz butonu
+            if st.button("🔍 Bu Veriyi Analiz Et", type="primary"):
+                st.session_state.table_data = uploaded_df
+                st.session_state.selected_table = uploaded_table
+                st.session_state.table_analyzed = False
+                st.success("✅ Veri analiz için hazırlandı!")
+                st.rerun()
+            
+            st.markdown("---")
         
         # Tablo seçimi
         st.subheader("📋 Tablo Seçimi")
