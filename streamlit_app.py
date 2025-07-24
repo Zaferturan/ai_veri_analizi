@@ -397,44 +397,20 @@ class StreamlitApp:
     
     def render_header(self):
         """Ana başlığı göster"""
-        # Sidebar toggle'ı görünür yapmak için CSS
-        st.markdown("""
-        <style>
-        /* Sidebar toggle butonunu görünür yap - BASİT VE ETKİLİ */
-        [data-testid="collapsedControl"] {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            position: fixed !important;
-            top: 10px !important;
-            left: 10px !important;
-            z-index: 9999 !important;
-            background-color: #1f77b4 !important;
-            color: white !important;
-            border-radius: 50% !important;
-            width: 40px !important;
-            height: 40px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
-            font-size: 16px !important;
-            cursor: pointer !important;
-        }
+        # Logo ve başlık yan yana
+        col1, col2 = st.columns([1, 4])
         
-        /* Sidebar toggle butonuna hover efekti */
-        [data-testid="collapsedControl"]:hover {
-            background-color: #1565c0 !important;
-            transform: scale(1.1) !important;
-        }
+        with col1:
+            try:
+                st.image("logo.png", width=80)
+            except:
+                st.markdown("🔍")  # Logo yoksa emoji göster
+                
+        with col2:
+            st.markdown('<h1 class="main-header">🔍 Nilüfer Kaşif - AI Destekli Veri Analizi</h1>', 
+                       unsafe_allow_html=True)
         
-        /* Sidebar kapalıyken toggle butonunu göster */
-        .stApp[data-collapsed="true"] [data-testid="collapsedControl"] {
-            display: block !important;
-            visibility: visible !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
+        st.markdown("---")
         
         # Logo ve başlık yan yana
         col1, col2 = st.columns([1, 4])
@@ -1667,218 +1643,24 @@ class StreamlitApp:
 
 def main():
     """Ana uygulama fonksiyonu"""
-    # CSS stilleri - KAPSAMLI ÜST BOŞLUK KALDIRMA
+    # CSS stilleri - SADECE TEMEL STİLLER
     st.markdown("""
     <style>
-        /* EN GÜÇLÜ CSS - TÜM ÜST BOŞLUKLARI KALDIR */
-        
-        /* 1. Streamlit'in tüm header'ını tamamen kaldır */
-        .stApp > header,
-        .stApp > header *,
-        .stApp > div:first-child > header,
-        .stApp > div:first-child > header *,
-        .stApp > div > header,
-        .stApp > div > header *,
-        .stApp > div > div > header,
-        .stApp > div > div > header * {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            height: 0 !important;
-            width: 0 !important;
-            overflow: hidden !important;
-            position: absolute !important;
-            left: -9999px !important;
-            top: -9999px !important;
-            pointer-events: none !important;
-        }
-        
-        /* 2. Ana container'ın tüm üst boşluklarını kaldır */
-        .main .block-container,
-        .main .block-container *,
-        .main > div,
-        .main > div * {
-            padding-top: 0 !important;
-            margin-top: 0 !important;
-        }
-        
-        /* 3. Sidebar'ın üst boşluklarını kaldır */
-        .css-1d391kg,
-        .css-1d391kg *,
-        .sidebar .sidebar-content,
-        .sidebar .sidebar-content * {
-            padding-top: 0 !important;
-            margin-top: 0 !important;
-        }
-        
-        /* 4. Tüm sayfa seviyesi boşlukları kaldır */
-        .stApp,
-        .stApp > div,
-        .stApp > div > div,
-        .stApp > div > div > div {
-            padding-top: 0 !important;
-            margin-top: 0 !important;
-        }
-        
-        /* 5. Özel olarak ilk div'lerin boşluklarını kaldır */
-        .stApp > div:first-child,
-        .stApp > div:first-child > div:first-child,
-        .main > div:first-child,
-        .main > div:first-child > div:first-child {
-            padding-top: 0 !important;
-            margin-top: 0 !important;
-            height: auto !important;
-            min-height: 0 !important;
-        }
-        
-        /* 6. Tüm elementlerin üst margin'lerini sıfırla */
-        * {
-            margin-top: 0 !important;
-        }
-        
-        /* 6.5. Streamlit'in kendi CSS'ini override et */
-        .stApp > div:first-child {
-            padding-top: 0 !important;
-            margin-top: 0 !important;
-            height: auto !important;
-            min-height: 0 !important;
-        }
-        
-        /* 6.6. Main container'ı tamamen yukarı taşı */
-        .main .block-container {
-            padding-top: 0 !important;
-            margin-top: 0 !important;
-            padding-bottom: 1rem !important;
-        }
-        
-        /* 6.7. Tüm div'lerin üst boşluklarını kaldır */
-        div {
-            margin-top: 0 !important;
-        }
-        
-        /* 6.8. Özel olarak ilk elementleri hedefle */
-        .stApp > div:first-child,
-        .stApp > div:first-child > div:first-child,
-        .stApp > div:first-child > div:first-child > div:first-child {
-            padding-top: 0 !important;
-            margin-top: 0 !important;
-            height: auto !important;
-            min-height: 0 !important;
-        }
-        
-        /* 6.9. Tüm olası boşlukları kaldır - EN GÜÇLÜ */
-        .stApp,
-        .stApp *,
-        .stApp > div,
-        .stApp > div *,
-        .stApp > div > div,
-        .stApp > div > div *,
-        .stApp > div > div > div,
-        .stApp > div > div > div * {
-            margin-top: 0 !important;
-        }
-        
-        /* 6.10. Özel olarak padding'leri de kaldır */
-        .stApp,
-        .stApp > div,
-        .stApp > div > div,
-        .stApp > div > div > div {
-            padding-top: 0 !important;
-        }
-        
-        /* 6.11. Body ve html elementlerini de hedefle */
-        body, html {
-            margin-top: 0 !important;
-            padding-top: 0 !important;
-        }
-        
-        /* 7. Özel olarak logo ve başlık için */
         .main-header {
             font-size: 2.5rem;
             font-weight: bold;
             color: #1f77b4;
             text-align: center;
-            margin-top: 0 !important;
-            padding-top: 0 !important;
             margin-bottom: 0.5rem !important;
         }
         
-        /* 8. Logo container'ı için */
-        .stImage {
-            margin-top: 0 !important;
-            padding-top: 0 !important;
-        }
-        
-        /* 9. Sağ üst menüleri gizle */
-        #MainMenu {
-            visibility: hidden !important;
-        }
-        
-        /* 10. Sidebar toggle butonunu koru - BASİT VE ETKİLİ */
-        [data-testid="collapsedControl"] {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            position: fixed !important;
-            top: 10px !important;
-            left: 10px !important;
-            z-index: 9999 !important;
-            background-color: #1f77b4 !important;
-            color: white !important;
-            border-radius: 50% !important;
-            width: 40px !important;
-            height: 40px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
-            font-size: 16px !important;
-            cursor: pointer !important;
-        }
-        
-        /* 11. Sidebar toggle butonuna hover efekti */
-        [data-testid="collapsedControl"]:hover {
-            background-color: #1565c0 !important;
-            transform: scale(1.1) !important;
-        }
-        /* Deploy butonunu ve geliştirme öğelerini tamamen kaldır */
-        .stDeployButton,
-        .stDeployButton > *,
-        [data-testid="stDeployButton"],
-        [data-testid="stDeployButton"] > *,
-        .stApp > header [data-testid="stDeployButton"],
-        .stApp > header .stDeployButton,
-        .stApp > header button[data-testid="stDeployButton"],
-        .stApp > header button.stDeployButton,
-        .stApp > header a[data-testid="stDeployButton"],
-        .stApp > header a.stDeployButton,
-        /* Geliştirme öğelerini kaldır */
-        [data-testid="stToolbar"],
-        [data-testid="stToolbar"] > *,
-        .stApp > header [data-testid="stToolbar"],
-        .stApp > header [data-testid="stToolbar"] > *,
-        /* File change, Rerun, Always rerun butonları */
-        [data-testid="stToolbar"] button,
-        [data-testid="stToolbar"] a,
-        [data-testid="stToolbar"] span,
-        /* Tüm toolbar içeriği */
-        .stApp > header [data-testid="stToolbar"] * {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
-            position: absolute !important;
-            left: -9999px !important;
-            top: -9999px !important;
-        }
-
-
         .metric-card {
             background-color: #f0f2f6;
             padding: 1rem;
             border-radius: 0.5rem;
             border-left: 4px solid #1f77b4;
         }
+        
         .success-box {
             background-color: #d4edda;
             border: 1px solid #c3e6cb;
@@ -1886,6 +1668,7 @@ def main():
             padding: 1rem;
             margin: 1rem 0;
         }
+        
         .error-box {
             background-color: #f8d7da;
             border: 1px solid #f5c6cb;
