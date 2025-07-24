@@ -16,7 +16,7 @@
 
 </div>
 
-> **VeriKeşif**, kullanıcı taleplerini ve önerilerini analiz etmek için geliştirilmiş, yapay zeka destekli bir veri analiz platformudur. MySQL veritabanlarından veri keşfi yapar, AI modelleri ile metin analizi gerçekleştirir ve performans metriklerini izler.
+> **VeriKeşif**, kullanıcı taleplerini ve önerilerini analiz etmek için geliştirilmiş, yapay zeka destekli bir veri analiz platformudur. MySQL veritabanlarından veri keşfi yapar, Ollama yerel AI modelleri ile metin analizi gerçekleştirir ve performans metriklerini izler.
 
 <div align="center">
 
@@ -24,9 +24,9 @@
 
 | 🔐 **Güvenlik** | 📊 **Veri Analizi** | 🤖 **AI Destekli** | 📈 **Performans** |
 |:---:|:---:|:---:|:---:|
-| JWT Token Yönetimi | MySQL Tablo Analizi | OpenAI GPT Entegrasyonu | Embedding Cache |
-| Rol Tabanlı Erişim | Veri Kalitesi Kontrolü | Google Gemini API | Prometheus Metrikler |
-| Şifre Hashleme | Metin Kolonu Tespiti | Metin Özetleme | Gerçek Zamanlı İzleme |
+| JWT Token Yönetimi | MySQL Tablo Analizi | Ollama Yerel AI | Embedding Cache |
+| Rol Tabanlı Erişim | Veri Kalitesi Kontrolü | Türkçe Prompt Sistemi | Prometheus Metrikler |
+| Şifre Hashleme | Metin Kolonu Tespiti | Çoklu Model Desteği | Gerçek Zamanlı İzleme |
 
 </div>
 
@@ -36,7 +36,7 @@ VeriKeşif, kurumların müşteri geri bildirimlerini, talep ve önerilerini ana
 
 - **🔐 Kimlik Doğrulama Sistemi**: Rol tabanlı erişim kontrolü
 - **📊 Veri Keşif Modülü**: MySQL tablolarının otomatik analizi
-- **🧠 AI Destekli Analiz**: OpenAI GPT ve Google Gemini entegrasyonu
+- **🧠 AI Destekli Analiz**: Ollama yerel AI modelleri entegrasyonu
 - **💾 Embedding Cache**: Performans optimizasyonu
 - **📈 Metrik İzleme**: Prometheus uyumlu performans takibi
 
@@ -57,11 +57,12 @@ VeriKeşif, kurumların müşteri geri bildirimlerini, talep ve önerilerini ana
 - **JSON Rapor Dışa Aktarma**: Detaylı analiz sonuçları
 
 ### 🤖 AI Destekli Analiz Sistemi
-- **Metin Özetleme**: OpenAI GPT ve Google Gemini ile akıllı özetleme
+- **Metin Özetleme**: Ollama yerel AI modelleri ile akıllı özetleme
 - **Metin Kümeleme**: Benzer içerikleri gruplandırma
 - **Metin Sınıflandırma**: Kategori bazlı sınıflandırma
 - **Trend Analizi**: Zaman içindeki değişimleri analiz etme
-- **Çoklu Model Desteği**: OpenAI ve Gemini API entegrasyonu
+- **Çoklu Model Desteği**: Ollama yerel modelleri (llama3, qwen2.5, mistral)
+- **Türkçe Prompt Sistemi**: Özelleştirilebilir Türkçe prompt'lar
 - **Embedding Cache Entegrasyonu**: Performans optimizasyonu
 - **Metrics İzleme**: Prometheus uyumlu metrik toplama
 - **JSON Sonuç Dışa Aktarma**: Analiz sonuçlarını kaydetme
@@ -97,7 +98,7 @@ VeriKeşif, kurumların müşteri geri bildirimlerini, talep ve önerilerini ana
 ### Gereksinimler
 - **Python**: 3.8 veya üzeri
 - **MySQL**: Veri kaynağı için
-- **API Anahtarları**: OpenAI ve/veya Google Gemini (opsiyonel)
+- **Ollama**: Yerel AI modelleri için (opsiyonel)
 
 ### 1. Projeyi İndirin
 ```bash
@@ -133,8 +134,6 @@ nano .env
 **Önemli:** `.env` dosyasında şu bilgileri güncelleyin:
 - `MYSQL_PASSWORD`: MySQL şifreniz
 - `POSTGRES_PASSWORD`: PostgreSQL şifreniz  
-- `OPENAI_API_KEY`: OpenAI API anahtarınız
-- `GEMINI_API_KEY`: Google Gemini API anahtarınız
 - `JWT_SECRET_KEY`: JWT için güvenli bir anahtar
 
 ### 5. Örnek Kullanıcılar Oluşturun
@@ -231,14 +230,14 @@ ai_helper = AIHelper()
 
 # Metin özetleme
 texts = ["Uzun metin 1...", "Uzun metin 2..."]
-summary = ai_helper.summarize_texts(texts, model="openai", max_length=500)
+summary = ai_helper.summarize_texts(texts, model="llama3:latest")
 print(f"Özet: {summary['summary']}")
 ```
 
 ### Metin Kümeleme
 ```python
 # Metin kümeleme
-clusters = ai_helper.cluster_texts(texts, model="gemini", n_clusters=3)
+clusters = ai_helper.cluster_texts(texts, model="qwen2.5-coder:32b-instruct-q4_0")
 for cluster in clusters['clusters']:
     print(f"Grup: {cluster['name']} - Metinler: {cluster['text_indices']}")
 ```
@@ -247,7 +246,7 @@ for cluster in clusters['clusters']:
 ```python
 # Metin sınıflandırma
 categories = ["Teknik", "Genel", "Şikayet", "Öneri"]
-classification = ai_helper.classify_texts(texts, model="openai", categories=categories)
+classification = ai_helper.classify_texts(texts, model="mistral:latest")
 for item in classification['classifications']:
     print(f"Metin {item['text_index']}: {item['category']}")
 ```
@@ -256,20 +255,20 @@ for item in classification['classifications']:
 ```python
 # Trend analizi
 dates = ["2024-01-01", "2024-01-02", "2024-01-03"]
-trends = ai_helper.analyze_trends(texts, dates, model="gemini")
+trends = ai_helper.analyze_trends(texts, dates, model="llama3:latest")
 print(f"Trendler: {trends['trends']}")
 ```
 
 ### CLI Kullanımı
 ```bash
 # Metin özetleme
-python ai_helper.py --action summarize --texts "Metin 1" "Metin 2" --model openai
+python ai_helper.py --action summarize --texts "Metin 1" "Metin 2" --model llama3:latest
 
 # Metin kümeleme
-python ai_helper.py --action cluster --texts "Metin 1" "Metin 2" "Metin 3" --n-clusters 2
+python ai_helper.py --action cluster --texts "Metin 1" "Metin 2" "Metin 3" --model qwen2.5-coder:32b-instruct-q4_0
 
 # Metin sınıflandırma
-python ai_helper.py --action classify --texts "Teknik metin" "Genel metin" --categories "Teknik" "Genel"
+python ai_helper.py --action classify --texts "Teknik metin" "Genel metin" --model mistral:latest
 
 # Trend analizi
 python ai_helper.py --action trends --texts "Metin 1" "Metin 2" --dates "2024-01-01" "2024-01-02"
@@ -392,7 +391,7 @@ streamlit run streamlit_app.py --server.port 8501
   - En sık kelimeler
 
 #### 3. AI Analizi
-- AI modelini seçin (OpenAI veya Gemini)
+- AI modelini seçin (Ollama yerel modelleri)
 - AI işlemini seçin:
   - **Özetleme**: Metinleri kısa özetlere dönüştürme
   - **Sınıflandırma**: Metinleri kategorilere ayırma
@@ -488,10 +487,6 @@ istek_oneri_analizi/
 
 ### Ortam Değişkenleri
 ```bash
-# API Anahtarları
-OPENAI_API_KEY=your_openai_api_key
-GEMINI_API_KEY=your_gemini_api_key
-
 # Veritabanı Ayarları
 DB_HOST=localhost
 DB_USER=root
@@ -506,8 +501,6 @@ METRICS_HOST=0.0.0.0
 ### Örnek Yapılandırma Dosyası
 ```bash
 # example.env
-OPENAI_API_KEY=sk-...
-GEMINI_API_KEY=AIza...
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=mypassword
@@ -531,11 +524,11 @@ pip install prometheus_client
 pip install pymysql
 ```
 
-**3. OpenAI API Hatası**
+**3. Ollama Bağlantı Hatası**
 ```bash
-# Hata: openai modeli kullanılamıyor
-# Çözüm: OPENAI_API_KEY ortam değişkenini ayarlayın
-export OPENAI_API_KEY=your_api_key_here
+# Hata: Ollama bağlantısı kurulamadı
+# Çözüm: Ollama servisinin çalıştığından emin olun
+ollama serve
 ```
 
 **4. Embedding Model Yükleme Hatası**
@@ -624,8 +617,7 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 
 ## 🙏 Teşekkürler
 
-- **OpenAI**: GPT modelleri için
-- **Google**: Gemini API için
+- **Ollama**: Yerel AI modelleri için
 - **Prometheus**: Metrik izleme için
 - **SQLAlchemy**: Veritabanı ORM için
 - **FastAPI**: Web framework için
