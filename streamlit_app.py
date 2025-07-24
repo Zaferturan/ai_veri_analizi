@@ -402,61 +402,51 @@ class StreamlitApp:
         # Sidebar toggle'ı görünür yapmak için CSS
         st.markdown("""
         <style>
-        /* Sidebar toggle butonunu görünür yap */
-        .css-1d391kg,
-        .css-1d391kg *,
-        [data-testid="collapsedControl"],
-        [data-testid="collapsedControl"] *,
-        .stApp > div:first-child > div:first-child > div:first-child,
-        .stApp > div:first-child > div:first-child > div:first-child * {
+        /* Streamlit'in orijinal sidebar toggle'ını geri getir */
+        [data-testid="collapsedControl"] {
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
-            position: relative !important;
-            left: auto !important;
-            top: auto !important;
-            width: auto !important;
-            height: auto !important;
-            overflow: visible !important;
-            pointer-events: auto !important;
+            position: fixed !important;
+            top: 0.5rem !important;
+            left: 0.5rem !important;
+            z-index: 9999 !important;
+            background-color: #1f77b4 !important;
+            color: white !important;
+            border-radius: 50% !important;
+            width: 2.5rem !important;
+            height: 2.5rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+            font-size: 1rem !important;
+            cursor: pointer !important;
+            border: none !important;
         }
         
-        /* Sidebar kapalıyken toggle butonunu göster */
+        /* Sidebar kapalıyken toggle butonunu mutlaka göster */
         .stApp[data-collapsed="true"] [data-testid="collapsedControl"],
-        .stApp[data-collapsed="true"] .css-1d391kg {
+        .stApp[data-collapsed="true"] .css-1d391kg,
+        .stApp[data-collapsed="true"] .stApp > div:first-child > div:first-child > div:first-child {
             display: block !important;
             visibility: visible !important;
+            opacity: 1 !important;
+            position: fixed !important;
+            top: 0.5rem !important;
+            left: 0.5rem !important;
+            z-index: 9999 !important;
         }
         
-        /* Manuel toggle butonu için stil */
-        .manual-toggle {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            z-index: 9999;
-            background: #ff4b4b;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            font-size: 18px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .manual-toggle:hover {
-            background: #ff3333;
+        /* Toggle butonuna hover efekti */
+        [data-testid="collapsedControl"]:hover {
+            background-color: #1565c0 !important;
+            transform: scale(1.1) !important;
         }
         </style>
         """, unsafe_allow_html=True)
         
-        # Manuel sidebar toggle butonu
-        if st.button("☰", key="manual_sidebar_toggle", help="Sidebar'ı aç/kapat"):
-            if st.session_state.get('sidebar_state', 'expanded') == 'expanded':
-                st.session_state.sidebar_state = 'collapsed'
-            else:
-                st.session_state.sidebar_state = 'expanded'
-            st.rerun()
+
         
         # Logo ve başlık yan yana
         col1, col2 = st.columns([1, 4])
@@ -1837,37 +1827,43 @@ def main():
         }
         
         /* 10. Sidebar toggle butonunu koru - çok güçlü seçiciler */
-        [data-testid="collapsedControl"],
-        .stApp [data-testid="collapsedControl"],
-        .stApp > div [data-testid="collapsedControl"],
-        .stApp > div > div [data-testid="collapsedControl"],
-        .stApp > div > div > div [data-testid="collapsedControl"] {
+        [data-testid="collapsedControl"] {
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
             position: fixed !important;
-            top: 5px !important;
-            left: 5px !important;
+            top: 0.5rem !important;
+            left: 0.5rem !important;
             z-index: 9999 !important;
-            height: auto !important;
-            width: auto !important;
-            overflow: visible !important;
             background-color: #1f77b4 !important;
             color: white !important;
             border-radius: 50% !important;
-            width: 40px !important;
-            height: 40px !important;
+            width: 2.5rem !important;
+            height: 2.5rem !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
-            font-size: 16px !important;
+            font-size: 1rem !important;
+            cursor: pointer !important;
+            border: none !important;
         }
         
         /* 11. Sidebar toggle butonuna hover efekti */
         [data-testid="collapsedControl"]:hover {
             background-color: #1565c0 !important;
             transform: scale(1.1) !important;
+        }
+        
+        /* 12. Sidebar kapalıyken toggle butonunu mutlaka göster */
+        .stApp[data-collapsed="true"] [data-testid="collapsedControl"] {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: fixed !important;
+            top: 0.5rem !important;
+            left: 0.5rem !important;
+            z-index: 9999 !important;
         }
         /* Deploy butonunu ve geliştirme öğelerini tamamen kaldır */
         .stDeployButton,
@@ -1900,29 +1896,7 @@ def main():
             top: -9999px !important;
         }
 
-        /* Sidebar toggle butonunu daha görünür yap */
-        [data-testid="collapsedControl"] {
-            background-color: #1f77b4 !important;
-            color: white !important;
-            border-radius: 50% !important;
-            width: 40px !important;
-            height: 40px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
-            position: fixed !important;
-            top: 5px !important;
-            left: 5px !important;
-            z-index: 9999 !important;
-            font-size: 16px !important;
-            visibility: visible !important;
-        }
-        /* Sidebar toggle butonuna hover efekti */
-        [data-testid="collapsedControl"]:hover {
-            background-color: #1565c0 !important;
-            transform: scale(1.1) !important;
-        }
+
         .metric-card {
             background-color: #f0f2f6;
             padding: 1rem;
