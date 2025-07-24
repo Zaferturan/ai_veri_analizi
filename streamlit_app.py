@@ -694,13 +694,13 @@ class StreamlitApp:
         uploaded_file = st.file_uploader(
             "📁 Dosya Seçin",
             type=['csv', 'xlsx', 'sql'],
-            help="CSV, Excel veya SQL dosyası yükleyin (Max: 10 MB)"
+            help="CSV, Excel veya SQL dosyası yükleyin (Max: 200 MB)"
         )
         
         if uploaded_file is not None:
-            # Dosya boyutu kontrolü (10 MB)
-            if uploaded_file.size > 10 * 1024 * 1024:
-                st.error("❌ Dosya boyutu 10 MB'dan büyük olamaz!")
+            # Dosya boyutu kontrolü (200 MB)
+            if uploaded_file.size > 200 * 1024 * 1024:
+                st.error("❌ Dosya boyutu 200 MB'dan büyük olamaz!")
                 return
             
             # Dosya türü kontrolü
