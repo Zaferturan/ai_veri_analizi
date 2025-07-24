@@ -400,8 +400,30 @@ class StreamlitApp:
         # Sidebar toggle'ı görünür yapmak için CSS
         st.markdown("""
         <style>
-        .css-1d391kg {
+        /* Sidebar toggle butonunu görünür yap */
+        .css-1d391kg,
+        .css-1d391kg *,
+        [data-testid="collapsedControl"],
+        [data-testid="collapsedControl"] *,
+        .stApp > div:first-child > div:first-child > div:first-child,
+        .stApp > div:first-child > div:first-child > div:first-child * {
             display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            left: auto !important;
+            top: auto !important;
+            width: auto !important;
+            height: auto !important;
+            overflow: visible !important;
+            pointer-events: auto !important;
+        }
+        
+        /* Sidebar kapalıyken toggle butonunu göster */
+        .stApp[data-collapsed="true"] [data-testid="collapsedControl"],
+        .stApp[data-collapsed="true"] .css-1d391kg {
+            display: block !important;
+            visibility: visible !important;
         }
         </style>
         """, unsafe_allow_html=True)
